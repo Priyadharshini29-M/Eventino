@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Horizontal Navigation</title>
+  <link rel="stylesheet" href="assets/css/style1.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navigation">
+    <nav>
+      <ul class="nav-links">
+        <li><a href="#home" onclick="navigateToSection(event, 'home')">Home</a></li>
+        <li><a href="#about" onclick="navigateToSection(event, 'about')">About</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Horizontal Sections Container -->
+  <div class="sections-container">
+    <!-- Home Section -->
+    <section id="home" class="section">
+      <h2>Home Section</h2>
+      <p>Welcome to the Home section of our website.</p>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section">
+      <h2>About Section</h2>
+      <p>This is the About section where we describe our website.</p>
+    </section>
+  </div>
+
+  <script src="/assets/js/new.js"></script>
+</body>
+</html>

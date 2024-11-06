@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firework By CodeSky</title>
+    <style>
+        body, html {
+            margin: 0px;
+            height: 100%;
+            overflow-y: hidden;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+    <script>
+        "use strict";
+
+        let canvas, width, height, ctx;
+        let fireworks = [];
+        let particles = [];
+        let loopInterval;
+        let fadeOutAlpha = 1; // Start fully opaque
+
+        function setup() {
+            canvas = document.getElementById("canvas");
+            setSize(canvas);
+            ctx = canvas.getContext("2d");
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, width, height);
+            fireworks.push(new Firework(Math.random() * (width - 200) + 100));
+            window.addEventListener("resize", windowResized);
+            document.addEventListener("click", onClick);
+        }
+
+        setTimeout(setup, 1);
+
+        function loop() {
+            ctx.globalAlpha = fadeOutAlpha; // Set global alpha for fade out
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, width, height);
+            ctx.globalAlpha = 1;
+
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                let done = fireworks[i].update();
+                fireworks[i].draw();
+                if (done) fireworks.splice(i, 1);
+            }
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].lifetime > 80) particles.splice(i, 1);
+            }
+
+            // Increase the frequency of firework creation
+            if (Math.random() < 1 / 30) {  // Fireworks created more frequently
+                fireworks.push(new Firework(Math.random() * (width - 200) + 100));
+            }
+        }
+
+        loopInterval = setInterval(loop, 1000 / 60);
+
+        // Stop the animation after 7 seconds
+        setTimeout(stopAnimation, 7000);
+
+        function stopAnimation() {
+            clearInterval(loopInterval);
+            fadeOut(); // Start fading out
+        }
+
+        function fadeOut() {
+            if (fadeOutAlpha > 0) {
+                fadeOutAlpha -= 0.01; // Decrease alpha
+                ctx.fillStyle = "#000000";
+                ctx.fillRect(0, 0, width, height); // Fill canvas with black
+                ctx.globalAlpha = fadeOutAlpha; // Update global alpha for fade out
+
+                // Draw the remaining fireworks and particles with decreasing alpha
+                for (let i = 0; i < fireworks.length; i++) {
+                    fireworks[i].draw();
+                }
+                for (let i = 0; i < particles.length; i++) {
+                    particles[i].draw();
+                }
+
+                requestAnimationFrame(fadeOut); // Continue fading out
+            } else {
+                // Clear the canvas completely once fade out is complete
+                ctx.fillStyle = "#000000"; // Set the background color
+                ctx.fillRect(0, 0, width, height); // Clear the canvas
+            }
+        }
+
+        class Particle {
+            constructor(x, y, col) {
+                this.x = x;
+                this.y = y;
+                this.col = col;
+                this.vel = randomVec(4); // Increased max speed for particles
+                this.lifetime = 0;
+            }
+
+            update() {
+                this.x += this.vel.x;
+                this.y += this.vel.y;
+                this.vel.y += 0.1; // Gravity effect increased
+                this.vel.x *= 0.99;
+                this.vel.y *= 0.99;
+                this.lifetime++;
+            }
+
+            draw() {
+                ctx.globalAlpha = Math.max(1 - this.lifetime / 80, 0);
+                ctx.fillStyle = this.col;
+                ctx.fillRect(this.x, this.y, 2, 2);
+            }
+        }
+
+        class Firework {
+            constructor(x) {
+                this.x = x;
+                this.y = height;
+                this.isBlown = false;
+                this.col = randomCol();
+            }
+
+            update() {
+                this.y -= 5; // Increased speed for fireworks
+                if (this.y < 350 - Math.sqrt(Math.random() * 500) * 40) {
+                    this.isBlown = true;
+                    for (let i = 0; i < 100; i++) { // Increased number of particles for brightness
+                        particles.push(new Particle(this.x, this.y, this.col));
+                    }
+                }
+                return this.isBlown;
+            }
+
+            draw() {
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = this.col;
+                ctx.fillRect(this.x, this.y, 2, 2);
+            }
+        }
+
+        function randomCol() {
+            var letter = '0123456789ABCDEF';
+            var nums = [];
+
+            for (var i = 0; i < 3; i++) {
+                nums[i] = Math.floor(Math.random() * 256);
+            }
+
+            let brightest = 0;
+            for (var i = 0; i < 3; i++) {
+                if (brightest < nums[i]) brightest = nums[i];
+            }
+
+            brightest /= 255;
+            for (var i = 0; i < 3; i++) {
+                nums[i] /= brightest; // Normalize brightness to enhance colors
+            }
+
+            let color = "#";
+            for (var i = 0; i < 3; i++) {
+                color += letter[Math.floor(nums[i] / 16)];
+                color += letter[Math.floor(nums[i] % 16)];
+            }
+            return color;
+        }
+
+        function randomVec(max) {
+            let dir = Math.random() * Math.PI * 2;
+            let spd = Math.random() * max;
+            return { x: Math.cos(dir) * spd, y: Math.sin(dir) * spd };
+        }
+
+        function setSize(canv) {
+            canv.style.width = (innerWidth) + "px";
+            canv.style.height = (innerHeight) + "px";
+            width = innerWidth;
+            height = innerHeight;
+
+            canv.width = innerWidth * window.devicePixelRatio;
+            canv.height = innerHeight * window.devicePixelRatio;
+            canvas.getContext("2d").scale(window.devicePixelRatio, window.devicePixelRatio);
+        }
+
+        function onClick(e) {
+            fireworks.push(new Firework(e.clientX));
+        }
+
+        function windowResized() {
+            setSize(canvas);
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, width, height);
+        }
+    </script>
+</body>
+</html>
